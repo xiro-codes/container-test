@@ -73,11 +73,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1778493245,
-        "narHash": "sha256-mVyRXh22ZqwF9aOWZDnOgFhJI++Te84AitRTOhhYJ/M=",
+        "lastModified": 1778493727,
+        "narHash": "sha256-rcAVcPq5Y5UjSdtbmVTsZUOBEJaQnzCs+G521HPrgfc=",
         "owner": "xiro-codes",
         "repo": "nix-compose",
-        "rev": "62c2b05239cf9753c84357e697ca0e8169093d79",
+        "rev": "0a7f6b5e77313ae133e944d0d221afc10e54118c",
         "type": "github"
       },
       "original": {
