@@ -19,7 +19,8 @@
     let
       # Define your cluster composition at the top level
       cluster = nix-compose.lib.mkCompose {
-        name = "nxc";
+        name = "dev";
+        subnet = "10.221.1";
         nodes = {
           server =
             { ... }:
