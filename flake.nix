@@ -5,6 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     nix-compose.url = "github:xiro-codes/nix-compose";
+    flake-schemas.url = "github:DeterminateSystems/flake-schemas";
   };
 
   outputs =
@@ -16,13 +17,11 @@
       ...
     }:
     let
-      pkgs = import nixpkgs { system = "x86_64-linux"; };
-      # Define your cluster nodes here
-      composition = nix-compose.lib.mkComposition {
-        inherit pkgs;
-        name = "cl";
+      # Define your cluster composition at the top level
+      cluster = nix-compose.lib.mkCompose {
+        name = "nxc";
         nodes = {
-          srv =
+          server =
             { ... }:
             {
               services.nginx = {
@@ -34,7 +33,7 @@
               };
               networking.firewall.allowedTCPPorts = [ 80 ];
             };
-          clt =
+          client =
             { pkgs, ... }:
             {
               environment.systemPackages = [ pkgs.curl ];
@@ -45,31 +44,24 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "x86_64-linux"
-        "aarch64-linux"
       ];
-      flake = {
-        # Export schemas so 'nix flake show' recognizes our custom outputs
-        inherit (nix-compose) schemas;
-      }
-      // composition.flake;
+
       perSystem =
         {
           pkgs,
           system,
           ...
         }:
+        let
+          # Evaluate the composition for the current system
+          comp = cluster.perSystem pkgs;
+        in
         {
           # Export the 'nxc' CLI app
-          apps.default = nix-compose.lib.mkApp {
-            inherit pkgs system;
-            inherit composition;
-          };
+          apps.default = comp.apps."${cluster.name}";
 
           # Export individual VM packages for building
-          packages = {
-            default = composition.nodes.srv;
-          }
-          // composition.nodes;
+          packages = comp.packages // comp.nodes';
 
           devShells.default = pkgs.mkShellNoCC {
             packages = [ pkgs.just ];
@@ -79,11 +71,16 @@
               echo "Available commands:"
               echo "  nix run . up          - Start the containers (requires sudo)"
               echo "  nix run . down        - Stop and destroy containers"
-              echo "  nix run . shell srv     - Enter the 'srv' container"
+              echo "  nix run . shell srv   - Enter the 'srv' container"
               echo "  nix run . status      - Show cluster status"
               echo "  just build            - Build all container toplevels"
             '';
           };
         };
+
+      flake = {
+        inherit (nix-compose) schemas;
+      }
+      // cluster.flake;
     };
 }
